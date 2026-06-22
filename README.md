@@ -20,6 +20,9 @@ DEPLOYMENT.md     GitHub Pages, domain, DNS and HTTPS instructions
 ROUTES.md         Current section map and legacy-anchor handling
 CONTACT_FLOW.md   Contact and Mirror data-handling behavior
 TODO.md           Real remaining assets and links to confirm
+mirror-config.js   Public configuration for optional response capture
+MIRROR_CAPTURE_APPS_SCRIPT.gs  Paste into the bound Google Apps Script project
+MIRROR_CAPTURE_SETUP.md        One-time capture setup instructions
 ```
 
 ## Site structure
@@ -64,3 +67,8 @@ Then open `http://localhost:8000`.
 ## Deployment
 
 Push changes to `main`. GitHub Pages publishes the repository root. For the custom-domain and DNS steps, read `DEPLOYMENT.md`.
+
+
+## Mirror capture
+
+`MIRROR_CAPTURE_SETUP.md` explains how to connect the optional, consent-based Google Sheet capture. The Mirror remains fully usable without it.

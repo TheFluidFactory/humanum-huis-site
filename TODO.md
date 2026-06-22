@@ -21,3 +21,8 @@
 - Static GitHub Pages deployment from `main` root.
 - Contact flow: direct `mailto:` to `flourish@humanumhuis.com`.
 - Mirror: local browser computation, no backend configured.
+
+## Mirror capture
+
+- [ ] Deploy the bound Google Apps Script web app and add its `/exec` URL to `mirror-config.js`. See `MIRROR_CAPTURE_SETUP.md`.
+- [ ] Decide a retention period for opted-in Mirror submissions before broad promotion.
