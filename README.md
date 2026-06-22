@@ -8,44 +8,34 @@ Production domain: **https://humanumhuis.com**
 
 This is a static GitHub Pages website. There is no build step, database, CMS, analytics platform, tracking script, booking service, or server-side application.
 
-The complete website, including the in-page **Human Readiness Mirror**, lives in `index.html`. CSS and JavaScript are intentionally self-contained. Google Fonts are the only runtime dependency.
+The complete site and the in-page **Human Readiness Mirror** live in `index.html`. CSS and JavaScript are intentionally self-contained. Google Fonts are the only runtime dependency.
 
+```text
+index.html                         Public site and Mirror
+404.html                           Branded GitHub Pages fallback
+CNAME                              Custom domain: humanumhuis.com
+.nojekyll                          Prevents GitHub Pages from applying Jekyll
+privacy.html                       Public Mirror contact-request privacy notice
+mirror-config.js                   Public Apps Script endpoint address; no credentials
+MIRROR_CAPTURE_APPS_SCRIPT.gs      Bound Google Apps Script source
+MIRROR_CAPTURE_SETUP.md            One-time contact-lead setup and test steps
+CONTACT_FLOW.md                    Contact and data-handling behavior
+DEPLOYMENT.md                      GitHub Pages, domain, DNS and HTTPS instructions
+ROUTES.md                          Current section map and legacy-anchor handling
+TODO.md                            Real remaining assets and links to confirm
 ```
-index.html        Complete public site and Human Readiness Mirror
-404.html          Branded GitHub Pages fallback
-CNAME             Custom domain: humanumhuis.com
-.nojekyll         Prevents GitHub Pages from applying Jekyll processing
-README.md         Repository overview and maintenance notes
-DEPLOYMENT.md     GitHub Pages, domain, DNS and HTTPS instructions
-ROUTES.md         Current section map and legacy-anchor handling
-CONTACT_FLOW.md   Contact and Mirror data-handling behavior
-TODO.md           Real remaining assets and links to confirm
-mirror-config.js   Public configuration for optional response capture
-MIRROR_CAPTURE_APPS_SCRIPT.gs  Paste into the bound Google Apps Script project
-MIRROR_CAPTURE_SETUP.md        One-time capture setup instructions
-```
 
-## Site structure
+## Human Readiness Mirror
 
-The public site is a single narrative page with normal in-page anchors:
+The Mirror is a 12-question in-page reflection. It calculates the archetype, Ladder position and readiness-gap profile in the browser.
 
-- `#human-readiness` — The Human Readiness Gap
-- `#building` — What Humanum Huis is building
-- `#method` — Mirror / Dream / Compass
-- `#work` — The Human Readiness Journey
-- `#ladder` — Five levels of human-AI maturity
-- `#patterns` — Patterns across organizations
-- `#start` — Self-selected starting points
-- `#about` — Founder and ecosystem
-- `#contact` — Final contact call to action
+- Completing the Mirror does not send or store answers.
+- The PDF result is generated locally in the browser.
+- The only data capture path is an explicit **Request a conversation** action with a required email address and consent checkbox.
+- Every valid request creates one private Google Sheet lead row and sends one notification to `flourish@humanumhuis.com`.
+- Anonymous results are not stored.
 
-On small screens, the primary navigation becomes an accessible menu toggle.
-
-## The Human Readiness Mirror
-
-The Mirror is a 12-question, in-page self-assessment. It calculates the archetype, Ladder position and readiness-gap profile in the visitor's browser. In this deployment, no responses are transmitted or stored.
-
-The source has optional support for `window.HRM_ENDPOINT`, but no endpoint is configured. If an endpoint is added later, the code only sends a request when the visitor has explicitly opted in. See `CONTACT_FLOW.md` before changing this behavior.
+See `MIRROR_CAPTURE_SETUP.md` before changing the contact endpoint or Apps Script.
 
 ## Preview locally
 
@@ -60,15 +50,11 @@ Then open `http://localhost:8000`.
 ## Editing the site
 
 - Content, styling and browser-side interactions live in `index.html`.
-- The site uses inline CSS tokens near the top of `index.html`.
+- The response endpoint address lives in `mirror-config.js` and is public by design; never put passwords, API tokens or spreadsheet credentials there.
+- Contact storage/notification code lives in `MIRROR_CAPTURE_APPS_SCRIPT.gs` and must stay in the private bound Apps Script project.
+- Review `privacy.html` if the data, retention or contact flow changes.
 - Do not remove `CNAME`, `.nojekyll`, or `404.html`.
-- Keep all public links relative or canonical; do not introduce Claude artifact or preview URLs.
 
 ## Deployment
 
-Push changes to `main`. GitHub Pages publishes the repository root. For the custom-domain and DNS steps, read `DEPLOYMENT.md`.
-
-
-## Mirror capture
-
-`MIRROR_CAPTURE_SETUP.md` explains how to connect the optional, consent-based Google Sheet capture. The Mirror remains fully usable without it.
+Push changes to `main`. GitHub Pages publishes the repository root. For domain and DNS steps, read `DEPLOYMENT.md`.

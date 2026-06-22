@@ -1,74 +1,86 @@
-# Mirror response capture — one-time setup
+# Mirror contact-lead setup — one-time update
 
-The website now has two independent result actions:
+This version deliberately stores **only people who ask Humanum Huis to contact them**. It does not collect anonymous Mirror results for trend analysis.
 
-1. **Save / print as PDF** works immediately in the visitor’s browser.
-2. **Save this reflection** appears after the free Google Apps Script endpoint is connected. It saves only visitors who explicitly opt in, including their optional email address.
+For every valid contact request, it writes a single private Sheet row and sends an email to `flourish@humanumhuis.com`. The email uses the visitor’s address as Reply-To, so Parker can simply reply.
 
-## What has already been created
+## Already prepared
 
-A Google Sheet is ready for responses:
+- The site’s public endpoint URL is already present in `mirror-config.js`.
+- The private response Sheet already exists and will automatically update its own headers when the first real lead is saved.
+- `MIRROR_CAPTURE_APPS_SCRIPT.gs` contains the complete replacement script.
 
-https://docs.google.com/spreadsheets/d/1sJ4BNBubDBdvG7qui-iU6aMfghMyIplYhAsGNrFs280/edit
+## Do these steps once
 
-It has a `Responses` tab and columns for consent, optional contact details, archetype, ladder level, gap scores, answer summary, result summary, source URL and Mirror version.
+### 1. Replace the Apps Script code
 
-## Your four manual steps
+1. Open the private response Sheet:
+   `https://docs.google.com/spreadsheets/d/1sJ4BNBubDBdvG7qui-iU6aMfghMyIplYhAsGNrFs280/edit`
+2. Choose **Extensions → Apps Script**.
+3. Open `Code.gs`.
+4. Replace everything in it with the full content of `MIRROR_CAPTURE_APPS_SCRIPT.gs` from this update.
+5. Click **Save**.
 
-### 1. Open the sheet and its script editor
+### 2. Publish the new script version
 
-1. Open the Google Sheet above while signed in to the Google Workspace account that should own the data.
-2. Click **Extensions → Apps Script**.
-3. In the editor, open `Code.gs`, select all existing code, delete it, and paste the full contents of `MIRROR_CAPTURE_APPS_SCRIPT.gs` from this package.
-4. Press **Save**. Name the Apps Script project `Humanum Huis Mirror capture` when Google asks.
+1. Click **Deploy → Manage deployments**.
+2. Open the existing **Web app** deployment and click **Edit**.
+3. Under **Version**, select **New version**.
+4. Keep **Execute as: Me** and **Who has access: Anyone**.
+5. Click **Deploy** and approve the new permission request. The new MailApp permission is required so the script can send lead notifications.
 
-### 2. Deploy it as the receiving endpoint
+Keep the existing `/exec` URL. A new deployment version updates the service behind it; it does not require changing `mirror-config.js`.
 
-1. In Apps Script, click **Deploy → New deployment**.
-2. Click the gear icon next to **Select type**, then choose **Web app**.
-3. Set **Execute as** to **Me**.
-4. Set **Who has access** to **Anyone**. This must allow visitors who are not signed into Google.
-5. Click **Deploy**, review/approve Google’s permissions, then copy the URL that ends in `/exec`.
+### 3. Upload the website files
 
-Do not use the `/dev` URL. It only works for editors and will fail for real visitors.
+Upload the changed/new files in this package to the root of `TheFluidFactory/humanum-huis-site`, replacing files with the same name:
 
-If Google Workspace does not offer **Anyone**, the Workspace admin has disabled public Apps Script web apps. Do not weaken Drive sharing; instead use an n8n webhook or ask the admin to permit this one web app.
-
-### 3. Put the endpoint URL in the website
-
-1. In the GitHub repository, open `mirror-config.js`.
-2. Replace the empty string in this line with the copied `/exec` URL:
-
-```js
-window.HRM_SUBMISSION_ENDPOINT = "PASTE_WEB_APP_URL_HERE";
+```text
+index.html
+mirror-config.js
+MIRROR_CAPTURE_APPS_SCRIPT.gs
+MIRROR_CAPTURE_SETUP.md
+CONTACT_FLOW.md
+README.md
+TODO.md
+privacy.html
 ```
 
-It should end up looking like this:
+Commit to `main` and wait for GitHub Pages to republish.
 
-```js
-window.HRM_SUBMISSION_ENDPOINT = "https://script.google.com/macros/s/EXAMPLE/exec";
-```
+### 4. Send one test notification
 
-3. Commit the file to `main`.
+1. Return to Apps Script.
+2. In the function selector near the top, choose `sendTestNotification`.
+3. Click **Run**.
+4. Approve permissions if Google asks.
+5. Confirm that `flourish@humanumhuis.com` receives the test email.
 
-The URL is allowed to be public. It is an endpoint address, not a password; the spreadsheet ID and Google account permissions remain inside Apps Script.
+### 5. Test the real visitor flow in an incognito window
 
-### 4. Test once before telling anyone
-
-1. Open the site in a private/incognito browser window.
+1. Open `https://humanumhuis.com` in an incognito/private window.
 2. Complete the Mirror.
-3. On the result page, select **Save this reflection**.
-4. Tick the storage consent, enter a test email, and save.
-5. Confirm that a new row appears in the `Responses` sheet.
-6. Check that **Save / print as PDF** opens a printer dialog where a visitor can choose **Save as PDF**.
+3. Check that the result page appears without any new Sheet row or email notification.
+4. Click **Request the Diagnostic** or **Start a conversation**.
+5. Enter a test email, tick the consent checkbox, and click **Request a conversation**.
+6. Confirm all three outcomes:
+   - one new row appears in the Sheet;
+   - its follow-up status is `New`;
+   - `flourish@humanumhuis.com` receives one notification with Reply-To set to the test email.
+7. Click **Save / print as PDF** to confirm the local PDF option still works.
 
-## Data posture used in the site
+## What should never create a Sheet row or notification
 
-- The Mirror still runs locally; nothing is stored automatically.
-- A response is saved only after the visitor ticks the explicit storage consent box.
-- Name, organization and email are optional.
-- An email is treated as permission for Humanum Huis to follow up about that submitted reflection.
-- The website does not send an automated email. This avoids a misleading sender address and keeps the setup simple.
-- Visitors are told they can request deletion through `flourish@humanumhuis.com`.
+- Completing the questions.
+- Viewing the result.
+- Typing into the contact form without submitting.
+- Submitting without an email address.
+- Submitting without the consent checkbox.
+- An obvious bot filling the hidden Website field.
 
-Before promoting the tool widely, decide internally how long submissions should be retained and include that in Humanum Huis’s public privacy information.
+## If something fails
+
+- **No email arrives:** In Apps Script, open **Executions**. The notification status in the Sheet will show whether the email step failed.
+- **No Sheet row appears:** Confirm the web app deployment is the latest version and still allows **Anyone**.
+- **The site says it sent but the Sheet is empty:** Clear cache or open the page in an incognito window, then confirm `mirror-config.js` still has the `/exec` URL.
+- **Do not change the deployment to run as the visitor.** It must run as the owner so anonymous public visitors are not asked to authorize Google access.

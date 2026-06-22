@@ -1892,7 +1892,7 @@ footer {
 .hrm-invite-body{font-size:.9rem;color:#a99e8e;line-height:1.85;margin:0 0 1rem;font-family:'Raleway',sans-serif;font-weight:300;}
 .hrm-tags{display:flex;flex-wrap:wrap;gap:.5rem;}
 .hrm-tag{font-family:'Raleway',sans-serif;font-size:.62rem;color:#5a5448;border:1px solid #2a2620;border-radius:2px;padding:.25rem .6rem;letter-spacing:.05em;}
-.hrm-invite-cta{background:#4a6359;color:#f4f0e8;border:none;padding:.9rem 2rem;font-family:'Raleway',sans-serif;font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;border-radius:2px;font-weight:400;cursor:pointer;display:inline-block;text-decoration:none;}
+.hrm-invite-cta{background:#4a6359;color:#f4f0e8;padding:.9rem 2rem;font-family:'Raleway',sans-serif;font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;border-radius:2px;font-weight:400;cursor:pointer;display:inline-block;text-decoration:none;}
 .hrm-invite-cta:hover{background:#5e7a6e;}
 .hrm-invite-cta-outline{background:none;border:1px solid #3a5345;color:#6e9080;padding:.8rem 1.75rem;font-family:'Raleway',sans-serif;font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;border-radius:2px;cursor:pointer;display:inline-block;text-decoration:none;}
 
@@ -2831,6 +2831,7 @@ footer {
         <h4>Connect</h4>
         <ul>
           <li><a href="mailto:flourish@humanumhuis.com?subject=Humanum%20Huis">flourish@humanumhuis.com</a></li>
+          <li><a href="privacy.html">Privacy</a></li>
         </ul>
       </div>
     </div>
@@ -3102,7 +3103,7 @@ const HRM = (function () {
   // ---- state ----
   let stage="intro", currentQ=0, answers={}, selected=null, introTrustOpen=false, consentGiven=false,
       result=null, gapScores=null, archetypeKey=null, ladderKey=null,
-      errorMsg="", expanded=null, lastReturnFocus=null, submissionState="idle";
+      errorMsg="", expanded=null, lastReturnFocus=null, submissionState="idle", pendingResponseId=null;
 
   // ---- scoring ----
   function calculateGaps(a){
@@ -3139,7 +3140,7 @@ const HRM = (function () {
 
   const esc = s => String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-  const MIRROR_VERSION = "2026-06-22-capture-v1";
+  const MIRROR_VERSION = "2026-06-22-contact-lead-v3";
 
   function buildAnswerPayload(answerSet){
     return QUESTIONS.map(q=>{
@@ -3238,7 +3239,7 @@ const HRM = (function () {
       <p class="hrm-lead">Twelve questions. A real reflection. Built on method, not intuition.</p>
       <p class="hrm-sub2">This Mirror moves through three phases — what is true now, what is possible, and where to begin. Takes about 5 minutes. Honesty produces a better result than aspiration.</p>
       <div class="hrm-phasedots">${cols.map(([w,s,col])=>`<div><span class="hrm-dot" style="background:${col};"></span><span class="hrm-pw">${w}</span><span class="hrm-ps">${s}</span></div>`).join("")}</div>
-      <p class="hrm-private-note">Your answers stay on this device while you complete the Mirror. At the end, you can choose to save or share your reflection — nothing is stored automatically.</p>
+      <p class="hrm-private-note">Your answers stay on this device while you complete the Mirror. At the end, you can request a conversation with Humanum Huis. Only then are your details and reflection sent.</p>
       <button class="hrm-btn-primary" data-act="begin">Begin the Mirror</button>
       <div class="hrm-trust">
         <button class="hrm-trust-toggle" data-act="trust">How this Mirror was built <span class="hrm-trust-icon">${introTrustOpen?"\u2212":"+"}</span></button>
@@ -3246,7 +3247,7 @@ const HRM = (function () {
           <p><strong>Where the questions come from.</strong> The twelve questions are drawn from established organizational research — Amy Edmondson's work on psychological safety, Rebecca Henderson on institutional incentives and purpose, and Gallup's findings on engagement and trust — translated into the language of how AI adoption actually plays out inside a team. They are designed to surface what is true, not to flatter.</p>
           <p><strong>How it reads you.</strong> Each answer maps to five readiness dimensions: strategic clarity, trust and safety, imagination, governance, and the gap between stated values and daily practice. Your pattern across all twelve places you on the Human Readiness Ladder and identifies the archetype that best fits what you described. The written reflection is assembled from your answer pattern and the readiness signals it creates — not a one-size-fits-all score.</p>
           <p><strong>Why you can trust it to be honest.</strong> The Mirror is built to tell you what is useful, not what is comfortable. If your answers reveal a significant gap, it will name it plainly and warmly. This free Mirror is a first reflection drawn from the surface of something deeper; the full Human Readiness Diagnostic goes further, with thirty statements across ten dimensions, taken by a team rather than one person.</p>
-          <p class="hrm-trust-note">The Mirror does not store or transmit answers while you complete it. At the result screen, you can optionally choose to save your response for Humanum Huis. That separate choice is always opt-in, and the result is the same whether you share it or not.</p>
+          <p class="hrm-trust-note">The Mirror does not store or transmit answers while you complete it. At the result screen, you can optionally request a conversation with Humanum Huis. That separate choice is always opt-in, and the result is the same whether you request contact or not.</p>
         </div>`:""}
       </div>
     </div>`;
@@ -3318,7 +3319,7 @@ const HRM = (function () {
 
   function focusCapture(){
     if(!submissionConfigured()){
-      window.location.href="mailto:flourish@humanumhuis.com?subject=Humanum%20Huis";
+      window.location.href="mailto:flourish@humanumhuis.com?subject=Humanum%20Huis%20Mirror";
       return;
     }
     const card=document.getElementById("hrm-capture-card");
@@ -3326,25 +3327,32 @@ const HRM = (function () {
     window.setTimeout(()=>{const input=document.getElementById("hrm-save-email"); if(input)input.focus();},350);
   }
 
-  async function saveMirrorResponse(){
+  async function requestConversation(){
     const consent=document.getElementById("hrm-save-consent");
     const name=document.getElementById("hrm-save-name");
     const organization=document.getElementById("hrm-save-organization");
     const email=document.getElementById("hrm-save-email");
     const website=document.getElementById("hrm-save-website");
-    const button=document.querySelector('[data-act="save-response"]');
-    if(!consent || !consent.checked){ setCaptureStatus("Please confirm that Humanum Huis may store this reflection before saving it.","error"); return; }
+    const button=document.querySelector('[data-act="request-conversation"]');
     const emailValue=(email&&email.value||"").trim();
-    if(emailValue && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)){ setCaptureStatus("Please enter a valid email address, or leave the field empty.","error"); return; }
-    if(!submissionConfigured()){ setCaptureStatus("Saving is not connected yet. You can still save or print your result as a PDF.","error"); return; }
-    const responseId=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():"hrm-"+Date.now()+"-"+Math.random().toString(16).slice(2);
+
+    if(!emailValue){ setCaptureStatus("Please enter your email address so Humanum Huis can reply.","error"); return; }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)){ setCaptureStatus("Please enter a valid email address.","error"); return; }
+    if(!consent || !consent.checked){ setCaptureStatus("Please confirm that you would like Humanum Huis to contact you about this reflection.","error"); return; }
+    if(!submissionConfigured()){
+      window.location.href="mailto:flourish@humanumhuis.com?subject=Humanum%20Huis%20Mirror";
+      return;
+    }
+
+    const responseId=pendingResponseId || ((window.crypto&&crypto.randomUUID)?crypto.randomUUID():"hrm-"+Date.now()+"-"+Math.random().toString(16).slice(2));
+    pendingResponseId=responseId;
     const payload={
-      event:"human_readiness_mirror_response",
+      event:"human_readiness_mirror_contact_request",
       mirror_version:MIRROR_VERSION,
       submitted_at:new Date().toISOString(),
       response_id:responseId,
-      consent_to_store:true,
-      contact_permission:!!emailValue,
+      contact_requested:true,
+      contact_consent:true,
       email:emailValue,
       name:(name&&name.value||"").trim(),
       organization:(organization&&organization.value||"").trim(),
@@ -3356,32 +3364,34 @@ const HRM = (function () {
       result:result,
       source_url:location.href.split("#")[0]
     };
-    if(button){button.disabled=true;button.textContent="Saving…";}
-    setCaptureStatus("Saving your reflection…");
+
+    if(button){button.disabled=true;button.textContent="Sending…";}
+    setCaptureStatus("Sending your request…");
     try{
       await fetch(window.HRM_SUBMISSION_ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)});
-      submissionState="saved"; render();
+      submissionState="sent"; render();
     }catch(err){
-      if(button){button.disabled=false;button.textContent="Save this reflection";}
-      setCaptureStatus("We could not save this just now. Please try again, or use Save / print as PDF.","error");
+      if(button){button.disabled=false;button.textContent="Request a conversation";}
+      setCaptureStatus("We could not send your request just now. Please try again or email flourish@humanumhuis.com.","error");
     }
   }
 
   function viewCaptureCard(){
-    if(!submissionConfigured()) return `<div class="hrm-card hrm-capture-card"><p class="hrm-card-label">Your copy</p><p class="hrm-capture-copy">Your full reflection stays in this browser unless you choose to save or print it. Use the button above to create a PDF.</p></div>`;
-    if(submissionState==="saved") return `<div id="hrm-capture-card" class="hrm-card hrm-capture-card"><p class="hrm-card-label">Reflection saved</p><h3 class="hrm-capture-title">Thank you for sharing it.</h3><p class="hrm-capture-copy">Your response has been saved for Humanum Huis. If you included an email address, the team can follow up about this reflection. You can still save a PDF copy for yourself above.</p></div>`;
+    if(!submissionConfigured()) return `<div id="hrm-capture-card" class="hrm-card hrm-capture-card"><p class="hrm-card-label">Discuss your reflection</p><h3 class="hrm-capture-title">Would you like to talk it through?</h3><p class="hrm-capture-copy">The contact form is being connected. You can still save a PDF above or email <a href="mailto:flourish@humanumhuis.com?subject=Humanum%20Huis%20Mirror" style="color:#9ec0ae;">flourish@humanumhuis.com</a>.</p></div>`;
+    if(submissionState==="sent") return `<div id="hrm-capture-card" class="hrm-card hrm-capture-card"><p class="hrm-card-label">Conversation requested</p><h3 class="hrm-capture-title">Thank you — Humanum Huis has your request.</h3><p class="hrm-capture-copy">Your contact details and this Mirror reflection have been recorded so the team can reply with context. You will not be added to a mailing list. You can still save a PDF copy above.</p></div>`;
     return `<div id="hrm-capture-card" class="hrm-card hrm-capture-card">
-      <p class="hrm-card-label">Keep the conversation open</p>
-      <h3 class="hrm-capture-title">Save this reflection with Humanum Huis</h3>
-      <p class="hrm-capture-copy">Optional. Save your answer pattern and result so Humanum Huis can learn from aggregate patterns. Add your email only if you would like a follow-up about this reflection.</p>
+      <p class="hrm-card-label">Discuss your reflection</p>
+      <h3 class="hrm-capture-title">Would you like Humanum Huis to get in touch?</h3>
+      <p class="hrm-capture-copy">Leave your email and your Mirror result will be shared with Humanum Huis so the conversation can begin with context. We use it only to respond to this request — not to add you to a mailing list.</p>
       <div class="hrm-capture-grid">
         <div class="hrm-capture-field"><label for="hrm-save-name">Name <span aria-hidden="true">(optional)</span></label><input id="hrm-save-name" type="text" autocomplete="name"></div>
         <div class="hrm-capture-field"><label for="hrm-save-organization">Organization <span aria-hidden="true">(optional)</span></label><input id="hrm-save-organization" type="text" autocomplete="organization"></div>
-        <div class="hrm-capture-field full"><label for="hrm-save-email">Email <span aria-hidden="true">(optional)</span></label><input id="hrm-save-email" type="email" autocomplete="email" inputmode="email" placeholder="you@organization.com"></div>
+        <div class="hrm-capture-field full"><label for="hrm-save-email">Email <span aria-hidden="true">(required)</span></label><input id="hrm-save-email" type="email" required autocomplete="email" inputmode="email" placeholder="you@organization.com"></div>
       </div>
       <div class="hrm-honeypot" aria-hidden="true"><label for="hrm-save-website">Website</label><input id="hrm-save-website" type="text" tabindex="-1" autocomplete="off"></div>
-      <label class="hrm-capture-consent"><input id="hrm-save-consent" type="checkbox"><span>I agree that Humanum Huis may store this response. If I include an email address, I agree that Humanum Huis may contact me about my result. You can request deletion at flourish@humanumhuis.com.</span></label>
-      <button class="hrm-invite-cta" type="button" data-act="save-response">Save this reflection</button>
+      <label class="hrm-capture-consent"><input id="hrm-save-consent" type="checkbox"><span>I ask Humanum Huis to contact me about this Mirror. I agree that it may store my contact details and Mirror result for this purpose. I can request deletion at <a href="privacy.html" target="_blank" rel="noopener" style="color:#9ec0ae;">any time</a>.</span></label>
+      <button class="hrm-invite-cta" type="button" data-act="request-conversation">Request a conversation</button>
+      <p class="hrm-capture-copy" style="margin-top:.9rem;margin-bottom:0;">Prefer email? <a href="mailto:flourish@humanumhuis.com?subject=Humanum%20Huis%20Mirror" style="color:#9ec0ae;">flourish@humanumhuis.com</a></p>
       <p id="hrm-capture-status" class="hrm-capture-status" aria-live="polite"></p>
     </div>`;
   }
@@ -3470,7 +3480,7 @@ const HRM = (function () {
       </div>
       ${viewCaptureCard()}
       <div class="hrm-center" style="margin-bottom:1rem;"><button class="hrm-rerun" data-act="rerun">Run again</button></div>
-      <p class="hrm-fineprint">Your result stays on this device unless you explicitly choose to save it above.</p>
+      <p class="hrm-fineprint">Your result stays on this device unless you explicitly request a conversation above.</p>
     </div>`;
   }
 
@@ -3504,10 +3514,10 @@ const HRM = (function () {
     else if(a==="trust"){introTrustOpen=!introTrustOpen;render();}
     else if(a==="print-result"){printResult();}
     else if(a==="focus-capture"){focusCapture();}
-    else if(a==="save-response"){saveMirrorResponse();}
+    else if(a==="request-conversation"){requestConversation();}
   }
 
-  function resetState(){stage="intro";currentQ=0;answers={};selected=null;result=null;gapScores=null;archetypeKey=null;ladderKey=null;errorMsg="";expanded=null;introTrustOpen=false;consentGiven=false;submissionState="idle";}
+  function resetState(){stage="intro";currentQ=0;answers={};selected=null;result=null;gapScores=null;archetypeKey=null;ladderKey=null;errorMsg="";expanded=null;introTrustOpen=false;consentGiven=false;submissionState="idle";pendingResponseId=null;}
 
   // ---- open / close ----
   function open(){
