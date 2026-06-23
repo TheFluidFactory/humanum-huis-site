@@ -55,7 +55,9 @@ body {
 /* ── NAV ── */
 nav {
   position: fixed;
-  top: 0; left: 0; right: 0;
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 100;
   background: rgba(244,240,232,0.96);
   backdrop-filter: blur(12px);
@@ -94,6 +96,10 @@ nav {
   line-height: 1;
 }
 
+.nav-toggle {
+  display: none;
+}
+
 .nav-links {
   display: flex;
   align-items: center;
@@ -112,7 +118,9 @@ nav {
   transition: color 0.2s;
 }
 
-.nav-links a:hover { color: var(--ink); }
+.nav-links a:hover {
+  color: var(--ink);
+}
 
 .nav-cta {
   font-family: 'Raleway', sans-serif;
@@ -127,7 +135,9 @@ nav {
   transition: background 0.2s !important;
 }
 
-.nav-cta:hover { background: var(--sage-deep) !important; }
+.nav-cta:hover {
+  background: var(--sage-deep) !important;
+}
 
 /* ── HERO ── */
 .hero {
@@ -2200,6 +2210,10 @@ footer {
   </ul>
 </nav>
 
+.nav-toggle {
+  display: none;
+}
+  
 <!-- HERO -->
 <section class="hero">
   <div class="hero-texture"></div>
